@@ -184,7 +184,7 @@ async function sendMessagesToChatbot() {
   chatWindow.textContent = "Loading...";
 
   try {
-    const response = await fetch("https://loreal-routine-builder.edgar-vazquezgonzalez.workers.dev/", {
+    const response = await fetch("https://loreal-routine-builder.edgar-vazquezgonzalez.workers.dev/api/chat", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -193,7 +193,7 @@ async function sendMessagesToChatbot() {
     });
 
     if (!response.headers.get("content-type")?.includes("application/json")) {
-      throw new Error("Chat endpoint unavailable. Open the app through the Node server.");
+      throw new Error(`Cloudflare chat endpoint returned an unexpected response (${response.status}).`);
     }
 
     const data = await response.json();
