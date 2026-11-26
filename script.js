@@ -10,6 +10,8 @@ const clearSelectionsBtn = document.getElementById("clearSelectionsBtn");
 
 let selectedProducts = JSON.parse(localStorage.getItem("selectedProducts")) || [];
 
+
+
 function saveSelectedProducts(){
     localStorage.setItem("selectedProducts", JSON.stringify(selectedProducts));
 }
@@ -179,10 +181,10 @@ categoryFilter.addEventListener("change", async (e) => {
 
 // function to send message to chatbot
 async function sendMessagesToChatbot() {
-  chatWindow.innerHTML = "Loading...";
+  chatWindow.textContent = "Loading...";
 
   try {
-    const response = await fetch("https://open-ai-worker.edgar-vazquezgonzalez.workers.dev", {
+    const response = await fetch("https://loreal-routine-builder.edgar-vazquezgonzalez.workers.dev/", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -190,19 +192,28 @@ async function sendMessagesToChatbot() {
       body: JSON.stringify({ messages }),
     });
 
-    const data = await response.json();
+    if (!response.headers.get("content-type")?.includes("application/json")) {
+      throw new Error("Chat endpoint unavailable. Open the app through the Node server.");
+    }
 
-    const assistantReply =
-      data.choices?.[0]?.message?.content || "No response received.";
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data.error || `Chat request failed (${response.status}).`);
+    }
+
+    const assistantReply = data.reply;
+    if (typeof assistantReply !== "string" || !assistantReply.trim()) {
+      throw new Error("No response received.");
+    }
 
     messages.push({
       role: "assistant",
       content: assistantReply
     });
 
-    chatWindow.innerHTML = assistantReply;
+    chatWindow.textContent = assistantReply;
   } catch (error) {
-    chatWindow.innerHTML = "Uh oh, something went wrong.";
+    chatWindow.textContent = error.message;
     console.error(error);
   }
 }
@@ -223,7 +234,7 @@ generateRoutineBtn.addEventListener("click", async () => {
   await sendMessagesToChatbot();
 });
 
-/* Chat form submission handler - placeholder for OpenAI integration */
+/* Chat form submission handler */
 chatForm.addEventListener("submit", async (e) => {
   e.preventDefault();
 
